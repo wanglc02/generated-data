@@ -1,0 +1,5 @@
+models/
+finetunes/
+result*
+graph/
+__pycache__
