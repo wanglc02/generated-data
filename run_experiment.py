@@ -71,7 +71,8 @@ def fine_tune_model(model, tokenizer, train_dataset, eval_dataset, args, generat
         per_device_train_batch_size=args.train_batch_size,
         per_device_eval_batch_size=args.eval_batch_size,
         num_train_epochs=args.num_train_epochs,  # 支持浮点数的训练 epoch 数
-        save_strategy="no",  # 不自动保存检查点
+        save_strategy="no",  # 不自动保存检查点,
+        learning_rate=args.learning_rate,
     )
 
     trainer = Trainer(

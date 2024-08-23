@@ -50,7 +50,7 @@ tokenized_eval_datasets.set_format("torch")
 print("Start training...")
 
 # Main iteration process
-for generation in range(2, NUM_GENERATIONS + 1):
+for generation in range(1, NUM_GENERATIONS + 1):
     # Load trained model
     if generation == 1:
         print("Loading source model")

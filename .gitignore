@@ -3,3 +3,5 @@ finetunes/
 result*
 graph/
 __pycache__
+settings.json
+
