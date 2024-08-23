@@ -1,46 +1,48 @@
-# Fine-tuning and Evaluating Transformers on Various Datasets
+# Transformer Model Pretraining and Fine-Tuning
 
-This repository provides scripts to fine-tune and evaluate transformer models on various datasets including CoLA, SST-2, QQP, MRPC, QNLI, RTE, IMDB, and Yelp.
+This repository provides scripts for pretraining, fine-tuning, and evaluating transformer models on datasets such as CoLA, SST-2, QQP, MRPC, QNLI, RTE, IMDB, and Yelp.
 
-## Requirements
+## Setup
 
-- Python 3.7+
-- PyTorch
-- Transformers
-- Datasets
-- Scikit-learn
-- Pandas
-
-You can install the required packages using the following command:
+Install dependencies with:
 
 ```bash
-pip install torch transformers datasets scikit-learn pandas
+pip install -r requirements.txt
 ```
 
-## Usage
+## Pretraining
 
-To fine-tune and evaluate a model on a specific dataset, run the following command:
+To pretrain a model, use the `train.py` script:
 
 ```bash
-python run_experiment.py --dataset <dataset_name> --output_dir <output_directory> --pretrained_models_dir <pretrained_models_directory> --tokenizer_path <tokenizer_path> --num_generations <num_generations>
+python train.py --model_size {1m|33m} --num_generations 40 --num_stories 1000000 --batch_size 2000
 ```
 
-## Example
+- `--model_size`: Choose "1m" or "33m".
+- `--num_generations`, `--num_stories`, `--batch_size`: Configure the pretraining.
+
+## Fine-Tuning and Evaluation
+
+Use `run_experiment.py` to fine-tune and evaluate models:
 
 ```bash
-python run_experiment.py --dataset sst2 --output_dir ./results --pretrained_models_dir ./pretrained_models --tokenizer_path ./tokenizer --num_generations 40
+python run_experiment.py --dataset <dataset_name> --fine_tune_dir <dir> --eval_results_dir <dir> --pretrained_models_dir <dir> --tokenizer_path <path> --num_generations 40
 ```
 
-## Parameters
+- `--dataset`: Dataset to use (`cola`, `sst2`, `qqp`, etc.).
+- `--fine_tune_dir`, `--eval_results_dir`, `--pretrained_models_dir`, `--tokenizer_path`: Specify paths.
+- `--num_generations`: Number of fine-tuning generations.
 
-* `--dataset`: The name of the dataset to use. Options are: `cola`, `sst2`, `qqp`, `mrpc`, `qnli`, `rte`, `imdb`, `yelp`.
-* `--output_dir`: The directory to save fine-tuned models and results.
-* `--pretrained_models_dir`: The directory containing pretrained models.
-* `--tokenizer_path`: The path to the tokenizer.
-* `--num_generations`: The number of generations to fine-tune.
-* `--max_length`: The maximum sequence length. Default is 128.
-* `--train_batch_size`: The training batch size. Default is 8.
-* `--eval_batch_size`: The evaluation batch size. Default is 32.
-* `--learning_rate`: The learning rate. Default is 2e-5.
-* `--num_train_epochs`: The number of training epochs. Default is 1.
-* `--weight_decay`: The weight decay. Default is 0.01.
+## Running All Downstream Tasks
+
+To automate fine-tuning across all datasets:
+
+```bash
+python run_downstreamtasks.py
+```
+
+Or use the shell script for a single experiment:
+
+```bash
+bash run_fintune.sh
+```
