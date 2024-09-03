@@ -9,7 +9,7 @@ os.makedirs('./graph', exist_ok=True)
 # List of file paths including new datasets
 file_paths = {
     'IMDB': './results-33m/imdb_eval_results_1/imdb_evaluation_results.xlsx',
-    'SST2': './results-33m/sst2_eval_results_1/sst2_evaluation_results.xlsx',
+    'SST-2': './results-33m/sst2_eval_results_1/sst2_evaluation_results.xlsx',
     'Yelp': './results-33m/yelp_eval_results_0.1/yelp_evaluation_results.xlsx',
     'QQP': './results-33m/qqp_eval_results_1/qqp_evaluation_results.xlsx',
     'QNLI': './results-33m/qnli_eval_results_1/qnli_evaluation_results.xlsx',
