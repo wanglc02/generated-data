@@ -3,12 +3,17 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from datasets import load_dataset
 import pandas as pd
-import re
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
+
+os.environ['http_proxy'] = "http://127.0.0.1:7890"
+os.environ['https_proxy'] = "http://127.0.0.1:7890"
+os.environ['all_proxy'] = "socks5://127.0.0.1:7890"
+
+HF_ENDPOINT="https://hf-mirror.com"
+os.environ["HF_ENDPOINT"] = HF_ENDPOINT
 # 设置设备
-# os.environ["CUDA_VISIBLE_DEVICES"] = "6,7"
-# os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 device = "cuda"
 
 # 加载数据集
@@ -16,36 +21,52 @@ def load_data(tokenizer_path):
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     tokenizer.pad_token = tokenizer.eos_token
     test = load_dataset("roneneldan/TinyStories", split="validation")
-    encodings = tokenizer("\n\n".join(test["text"]), return_tensors="pt")
+    
+    # 对每个故事分别编码，不要使用join
+    encodings = [tokenizer(story, return_tensors="pt") for story in test["text"]]
     return tokenizer, encodings
 
 # 计算PPL
 def calculate_ppl(model_path, encodings):
     model = AutoModelForCausalLM.from_pretrained(model_path).to(device)
     max_length = model.config.max_position_embeddings
-    stride = 512
-    seq_len = encodings.input_ids.size(1)
+    stride = 512  # 窗口步长，控制上下文长度
 
-    nlls = []
-    prev_end_loc = 0
-    for begin_loc in range(0, seq_len, stride):
-        end_loc = min(begin_loc + max_length, seq_len)
-        trg_len = end_loc - prev_end_loc
-        input_ids = encodings.input_ids[:, begin_loc:end_loc].to(device)
-        target_ids = input_ids.clone()
-        target_ids[:, :-trg_len] = -100
+    nlls = []  # 用于保存每个token的NLL
+    total_tokens = 0  # 计算总token数
 
-        with torch.no_grad():
-            outputs = model(input_ids, labels=target_ids)
-            neg_log_likelihood = outputs.loss
+    for encoding in tqdm(encodings):  # 遍历每个故事
+        seq_len = encoding.input_ids.size(1)
+        input_ids = encoding.input_ids.to(device)
 
-        nlls.append(neg_log_likelihood)
+        # 计算每个故事的NLL
+        prev_end_loc = 0
+        for begin_loc in range(0, seq_len, stride):
+            end_loc = min(begin_loc + max_length, seq_len)
+            trg_len = end_loc - prev_end_loc
 
-        prev_end_loc = end_loc
-        if end_loc == seq_len:
-            break
+            # 截取当前窗口的input_ids和target_ids
+            input_ids_window = input_ids[:, begin_loc:end_loc]
+            target_ids = input_ids_window.clone()
 
-    ppl = torch.exp(torch.stack(nlls).mean())
+            # 设置要忽略的部分，-100表示忽略
+            target_ids[:, :-trg_len] = -100
+
+            with torch.no_grad():
+                outputs = model(input_ids_window, labels=target_ids)
+                neg_log_likelihood = outputs.loss
+
+            # 将当前窗口的NLL添加到nlls列表
+            nlls.append(neg_log_likelihood.item() * trg_len)
+            total_tokens += trg_len
+
+            prev_end_loc = end_loc
+            if end_loc == seq_len:
+                break
+
+    # 计算整体的平均PPL
+    mean_nll = sum(nlls) / total_tokens
+    ppl = torch.exp(torch.tensor(mean_nll))
     return ppl.item()
 
 # 遍历生成并计算PPL
