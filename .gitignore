@@ -1,0 +1,6 @@
+models/
+finetunes/
+result*
+graph/
+__pycache__
+.vscode
