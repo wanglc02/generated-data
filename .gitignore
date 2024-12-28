@@ -4,3 +4,5 @@ result*
 graph/
 __pycache__
 .vscode
+
+dataset/

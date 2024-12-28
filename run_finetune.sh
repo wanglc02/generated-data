@@ -16,7 +16,7 @@ WEIGHT_DECAY=0
 GPU_ID=1  # 修改为你想使用的 GPU ID
 
 # 执行 Python 脚本
-CUDA_VISIBLE_DEVICES=$GPU_ID python run_experiment.py \
+CUDA_VISIBLE_DEVICES=$GPU_ID python scripts/run_experiment.py \
     --do_train \
     --do_eval \
     --dataset $DATASET \
